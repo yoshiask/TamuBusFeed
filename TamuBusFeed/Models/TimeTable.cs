@@ -14,6 +14,41 @@ namespace TamuBusFeed.Models
             get => timeStops;
             set => SetProperty(ref timeStops, value);
         }
+
+        /// <summary>
+        /// Gets the leave times for the specified trip.
+        /// </summary>
+        /// <returns>
+        /// The times in the specified row of the time table.
+        /// </returns>
+        public List<DateTimeOffset?> GetLeaveTimes(int tripIdx)
+        {
+            List<DateTimeOffset?> leaveTimes = new(TimeStops.Count);
+            foreach (var timeStop in TimeStops)
+                leaveTimes.Add(timeStop.LeaveTimes[tripIdx]);
+            return leaveTimes;
+        }
+
+        /// <summary>
+        /// Gets the next leave time for the specified stop.
+        /// </summary>
+        /// <param name="stopIdx">
+        /// The index of the stop to check.
+        /// </param>
+        /// <param name="targetTime">
+        /// The target time to match against. Usually the current time.
+        /// </param>
+        /// <returns>
+        /// The row of the time table that contains the next leave time.
+        /// </returns>
+        public List<DateTimeOffset?> GetNearestLeaveTimes(int stopIdx, DateTimeOffset targetTime)
+        {
+            var stop = TimeStops[stopIdx];
+            var time = stop.LeaveTimes.FirstOrDefault(lt => lt.HasValue && lt.Value >= targetTime);
+
+            int tripIdx = stop.LeaveTimes.IndexOf(time);
+            return GetLeaveTimes(tripIdx);
+        }
     }
 
     public class TimeStop : ObservableObject
