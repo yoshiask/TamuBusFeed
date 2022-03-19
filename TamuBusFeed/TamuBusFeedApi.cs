@@ -46,6 +46,13 @@ namespace TamuBusFeed
                 .GetJsonAsync<List<PatternElement>>();
         }
 
+        public static async Task<List<PatternElement>> GetStops(string shortname)
+        {
+            return await GetBase()
+                .AppendPathSegments("route", shortname, "stops")
+                .GetJsonAsync<List<PatternElement>>();
+        }
+
         public static async Task<AnnouncementFeed> GetAnnouncements()
         {
             return await GetBase()
@@ -85,12 +92,12 @@ namespace TamuBusFeed
             // Populate times
             foreach (var row in response)
             {
-                var rowTimes = row.Children().Select(c => c.Value<string>()).ToArray();
+                var rowTimes = row.Children<JProperty>().Select(c => c.Value.ToString()).ToArray();
                 for (int col = 0; col < row.Count; col++)
                 {
                     DateTimeOffset? time = null;
                     string timeStr = rowTimes[col];
-                    if (timeStr != null)
+                    if (!string.IsNullOrEmpty(timeStr))
                         time = DateTimeOffset.Parse(timeStr);
 
                     timeTable.TimeStops[col].LeaveTimes.Add(time);
