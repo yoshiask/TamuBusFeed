@@ -64,7 +64,7 @@ namespace TamuBusFeed
         {
             date ??= DateTimeOffset.Now;
             var response = await GetBase()
-                .AppendPathSegments("route", shortname, "TimeTable", "2022-03-24")//date.Value.ToString("yyyy-MM-dd"))
+                .AppendPathSegments("route", shortname, "TimeTable", date.Value.ToString("yyyy-MM-dd"))
                 .GetJsonAsync<List<JObject>>();
 
             TimeTable timeTable = new()
@@ -105,6 +105,13 @@ namespace TamuBusFeed
             }
 
             return timeTable;
+        }
+
+        public static async Task<List<Mentor>> GetVehicles(string shortname)
+        {
+            return await GetBase()
+                .AppendPathSegments("route", shortname, "buses", "mentor")
+                .GetJsonAsync<List<Mentor>>();
         }
     }
 
