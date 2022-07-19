@@ -18,6 +18,8 @@ namespace TamuBusFeed
     {
         public static string ApiKey { get; set; }
 
+        public static string BaspMapUrl { get; set; }
+
         public const string SERVICES_BASE = "https://gis.tamu.edu/arcgis/rest/services";
         // ILCB
         public static readonly MapPoint TamuCenter = new(-10724991.7064, 3582457.193500001, SpatialReferences.WebMercator);
@@ -66,7 +68,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(Number) LIKE '%{text}%' OR UPPER(BldgAbbr) LIKE '%{text}%' OR UPPER(BldgName) LIKE '%{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(SERVICES_BASE, "FCOR/TAMU_BaseMap/MapServer/1")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "1")));
             return Query(query, featureTable, ct);
         }
 
@@ -75,7 +77,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(BldgName) LIKE '{text}%' OR UPPER(BldgAbbr) LIKE '{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(SERVICES_BASE, "FCOR/TAMU_BaseMap/MapServer/1")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "1")));
             return Query(query, featureTable, ct);
         }
 
@@ -93,7 +95,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(LotName) LIKE '%{text}%' OR UPPER(Name) LIKE '%{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(SERVICES_BASE, "FCOR/TAMU_BaseMap/MapServer/0")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "0")));
             return Query(query, featureTable, ct);
         }
 
@@ -102,7 +104,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(LotName) LIKE '%{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(SERVICES_BASE, "FCOR/TAMU_BaseMap/MapServer/12")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "12")));
             return Query(query, featureTable, ct);
         }
 

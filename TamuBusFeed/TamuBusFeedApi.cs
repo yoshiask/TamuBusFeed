@@ -31,6 +31,14 @@ namespace TamuBusFeed
             return FEED_API_URL.WithHeader("Accept", "application/json");
         }
 
+        public static async Task InitAsync(string apiKey)
+        {
+            TamuArcGisApi.ApiKey = apiKey;
+
+            var values = await GetGisValues();
+            TamuArcGisApi.BaspMapUrl = values.MapBasemapUrl;
+        }
+
         public static async Task<List<Route>> GetRoutes()
         {
             return await GetBase()
@@ -112,6 +120,13 @@ namespace TamuBusFeed
             return await GetBase()
                 .AppendPathSegments("route", shortname, "buses", "mentor")
                 .GetJsonAsync<List<Mentor>>();
+        }
+
+        public static async Task<GisValues> GetGisValues()
+        {
+            return await GetBase()
+                .AppendPathSegments("Values", "GisServers")
+                .GetJsonAsync<GisValues>();
         }
     }
 
