@@ -1,4 +1,5 @@
 ﻿using Microsoft.Toolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -88,11 +89,12 @@ namespace TamuBusFeed.Models
 
         public List<PatternElement> Stops { get; } = new List<PatternElement>();
         public List<PatternElement> DetailedPattern { get; } = new List<PatternElement>();
-        public async Task<List<PatternElement>> GetDetailedPatternAsync()
+
+        public async Task<List<PatternElement>> GetDetailedPatternAsync(DateTimeOffset? date = null)
         {
             if (DetailedPattern == null || DetailedPattern.Count <= 0)
             {
-                foreach (PatternElement p in await TamuBusFeedApi.GetPattern(ShortName))
+                foreach (PatternElement p in await TamuBusFeedApi.GetPattern(ShortName, date))
                 {
                     p.Name = p.Name.Trim();
                     DetailedPattern.Add(p);

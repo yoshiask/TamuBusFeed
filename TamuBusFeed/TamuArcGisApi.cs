@@ -32,7 +32,7 @@ namespace TamuBusFeed
             return routeTask;
         }
 
-        public static async Task<IReadOnlyList<Route>> SolveRoute(RouteTask routeTask, IEnumerable<Models.SearchResult> stopPoints,
+        public static async Task<RouteResult> SolveRoute(RouteTask routeTask, IEnumerable<Models.SearchResult> stopPoints,
             TravelMode travelMode = null)
         {
             var routeParameters = await routeTask.CreateDefaultParametersAsync();
@@ -50,7 +50,7 @@ namespace TamuBusFeed
 
             var routeResult = await routeTask.SolveRouteAsync(routeParameters);
 
-            return routeResult?.Routes;
+            return routeResult;
         }
 
         public static async Task<IEnumerable<Models.SearchResult>> SearchAsync(string text, CancellationToken ct)
