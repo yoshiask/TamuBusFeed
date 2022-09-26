@@ -21,14 +21,16 @@ namespace TamuBusFeed
         public static string BaspMapUrl { get; set; }
 
         public const string SERVICES_BASE = "https://gis.tamu.edu/arcgis/rest/services";
+
+        public static readonly SpatialReference TamuSpatialReference = SpatialReferences.WebMercator;
+
         // ILCB
-        public static readonly MapPoint TamuCenter = new(-10724991.7064, 3582457.193500001, SpatialReferences.WebMercator);
+        public static readonly MapPoint TamuCenter = new(-10724991.7064, 3582457.193500001, TamuSpatialReference);
 
         public static async Task<RouteTask> StartRouteTask()
         {
-            var routeTask = await RouteTask.CreateAsync(new Uri(Url.Combine(SERVICES_BASE, "/Routing/20220119/NAServer/Route")));
-            routeTask.ApiKey = ApiKey;
-
+            Uri serviceUri = new(SERVICES_BASE + "/Routing/20220119/NAServer/Route");
+            var routeTask = await RouteTask.CreateAsync(serviceUri, ApiKey);
             return routeTask;
         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace TamuBusFeed.Models
@@ -12,6 +13,9 @@ namespace TamuBusFeed.Models
         public RsaData RSA { get; set; }
         public Work CurrentWork { get; set; }
         public List<Stop> NextStops { get; set; }
+
+        [JsonIgnore]
+        public Guid Id => new(Key);
     }
 
     public class MentorStop : Entity
