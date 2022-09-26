@@ -106,7 +106,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(LotName) LIKE '%{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "12")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "9")));
             return Query(query, featureTable, ct);
         }
 
