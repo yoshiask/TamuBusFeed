@@ -16,16 +16,34 @@ namespace TamuBusFeed
 {
     public static class TamuArcGisApi
     {
-        public static string ApiKey { get; set; }
+        private static string _apiKey;
+        public static string ApiKey
+        {
+            get => _apiKey;
+            set
+            {
+                _apiKey = value;
+                Esri.ArcGISRuntime.ArcGISRuntimeEnvironment.ApiKey = _apiKey;
+            }
+        }
 
-        public static string BaspMapUrl { get; set; }
+        public static string BaseMapUrl { get; set; }
 
         public const string SERVICES_BASE = "https://gis.tamu.edu/arcgis/rest/services";
 
-        public static readonly SpatialReference TamuSpatialReference = SpatialReferences.WebMercator;
+        public static SpatialReference TamuSpatialReference { get; private set; }
 
-        // ILCB
-        public static readonly MapPoint TamuCenter = new(-10724991.7064, 3582457.193500001, TamuSpatialReference);
+        public static MapPoint TamuCenter { get; private set; }
+
+        public static async Task InitAsync(string apiKey)
+        {
+            ApiKey = apiKey;
+
+            var values = await TamuBusFeedApi.GetGisValues();
+            TamuSpatialReference = SpatialReference.Create(int.Parse(values.MapSpatialReference));
+            TamuCenter = new(-10724991.7064, 3582457.193500001, TamuSpatialReference);  // ILCB
+            BaseMapUrl = values.MapBasemapUrl;
+        }
 
         public static async Task<RouteTask> StartRouteTask()
         {
@@ -70,7 +88,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(Number) LIKE '%{text}%' OR UPPER(BldgAbbr) LIKE '%{text}%' OR UPPER(BldgName) LIKE '%{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "1")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaseMapUrl, "1")));
             return Query(query, featureTable, ct);
         }
 
@@ -79,7 +97,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(BldgName) LIKE '{text}%' OR UPPER(BldgAbbr) LIKE '{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "1")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaseMapUrl, "1")));
             return Query(query, featureTable, ct);
         }
 
@@ -97,7 +115,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(LotName) LIKE '%{text}%' OR UPPER(Name) LIKE '%{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "0")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaseMapUrl, "0")));
             return Query(query, featureTable, ct);
         }
 
@@ -106,7 +124,7 @@ namespace TamuBusFeed
             text = text.ToUpperInvariant();
             string query = $"UPPER(LotName) LIKE '%{text}%'";
 
-            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaspMapUrl, "9")));
+            var featureTable = new ServiceFeatureTable(new Uri(Url.Combine(BaseMapUrl, "9")));
             return Query(query, featureTable, ct);
         }
 

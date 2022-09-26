@@ -31,14 +31,6 @@ namespace TamuBusFeed
             return FEED_API_URL.WithHeader("Accept", "application/json");
         }
 
-        public static async Task InitAsync(string apiKey)
-        {
-            TamuArcGisApi.ApiKey = apiKey;
-
-            var values = await GetGisValues();
-            TamuArcGisApi.BaspMapUrl = values.MapBasemapUrl;
-        }
-
         public static async Task<List<Route>> GetRoutes()
         {
             return await GetBase()
