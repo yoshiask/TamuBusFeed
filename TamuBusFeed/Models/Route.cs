@@ -94,7 +94,8 @@ namespace TamuBusFeed.Models
         {
             if (DetailedPattern == null || DetailedPattern.Count <= 0)
             {
-                foreach (PatternElement p in await TamuBusFeedApi.GetPattern(ShortName, date))
+                var api = new TamuBusFeedApi();
+                foreach (PatternElement p in await api.GetPattern(ShortName, date))
                 {
                     p.Name = p.Name.Trim();
                     DetailedPattern.Add(p);

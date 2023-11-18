@@ -39,10 +39,9 @@ namespace TamuBusFeed
         {
             ApiKey = apiKey;
 
-            var values = await TamuBusFeedApi.GetGisValues();
-            TamuSpatialReference = SpatialReference.Create(int.Parse(values.MapSpatialReference));
+            TamuSpatialReference = SpatialReference.Create(3857);
             TamuCenter = new(-10724991.7064, 3582457.193500001, TamuSpatialReference);  // ILCB
-            BaseMapUrl = values.MapBasemapUrl;
+            BaseMapUrl = SERVICES_BASE + "/FCOR/TAMU_BaseMap/MapServer";
         }
 
         public static async Task<RouteTask> StartRouteTask()
