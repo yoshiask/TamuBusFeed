@@ -1,78 +1,54 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Collections.Generic;
+using System.Linq;
 
-namespace TamuBusFeed.Models
+namespace TamuBusFeed.Models;
+
+public class Pattern
 {
-    public class Pattern : ObservableObject
+    public string RouteKey { get; set; }
+
+    public string? Color { get; set; }
+
+    public List<PatternPath> PatternPaths { get; set; }
+
+    public IEnumerable<PatternPoint> Points()
     {
-        private string key;
-        public string Key
-        {
-            get => key;
-            set => SetProperty(ref key, value);
-        }
-
-        private string name;
-        public string Name
-        {
-            get => name;
-            set => SetProperty(ref name, value);
-        }
-
-        private string shortName;
-        public string ShortName
-        {
-            get => shortName;
-            set => SetProperty(ref shortName, value);
-        }
-
-        private string description;
-        public string Description
-        {
-            get => description;
-            set => SetProperty(ref description, value);
-        }
-
-        private Direction direction;
-        public Direction Direction
-        {
-            get => direction;
-            set => SetProperty(ref direction, value);
-        }
-
-        private Info lineInfo;
-        public Info LineInfo
-        {
-            get => lineInfo;
-            set => SetProperty(ref lineInfo, value);
-        }
-
-        private Info timePointInfo;
-        public Info TimePointInfo
-        {
-            get => timePointInfo;
-            set => SetProperty(ref timePointInfo, value);
-        }
-
-        private Info busStopInfo;
-        public Info BusStopInfo
-        {
-            get => busStopInfo;
-            set => SetProperty(ref busStopInfo, value);
-        }
-
-        private bool isDisplay;
-        public bool IsDisplay
-        {
-            get => isDisplay;
-            set => SetProperty(ref isDisplay, value);
-        }
-
-        private bool isPrimary;
-        public bool IsPrimary
-        {
-            get => isPrimary;
-            set => SetProperty(ref isPrimary, value);
-        }
-
+        foreach (var path in PatternPaths)
+            foreach (var point in path.PatternPoints)
+                yield return point;
     }
+
+    public IEnumerable<PatternPoint> StopPoints() => Points().Where(p => p.IsStop);
+}
+
+public class PatternPath
+{
+    public string PatternKey { get; set; }
+
+    public List<PatternPoint> PatternPoints { get; set; }
+}
+
+public class PatternPoint
+{
+    public string Key { get; set; }
+
+    public string Name { get; set; }
+
+    public string Description { get; set; }
+
+    public int Rank { get; set; }
+
+    public double Longitude { get; set; }
+
+    public double Latitude { get; set; }
+
+    public bool IsStop { get; set; }
+
+    public bool IsTimePoint { get; set; }
+
+    public Stop? Stop { get; set; }
+
+    public int RouteHeaderRank { get; set; }
+
+    public double DistanceToPreviousPoint { get; set; }
 }

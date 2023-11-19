@@ -39,8 +39,8 @@ namespace TamuBusFeed
         {
             ApiKey = apiKey;
 
-            TamuSpatialReference = SpatialReference.Create(3857);
-            TamuCenter = new(-10724991.7064, 3582457.193500001, TamuSpatialReference);  // ILCB
+            TamuSpatialReference = SpatialReferences.Wgs84;
+            TamuCenter = new(-96.33965217, 30.61393756, TamuSpatialReference);  // MSC
             BaseMapUrl = SERVICES_BASE + "/FCOR/TAMU_BaseMap/MapServer";
         }
 

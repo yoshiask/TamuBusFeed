@@ -1,42 +1,22 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.Generic;
 
-namespace TamuBusFeed.Models
+namespace TamuBusFeed.Models;
+
+public partial class Stop : ObservableObject
 {
-    public class Stop : ObservableObject
-    {
-        private string key;
-        public string Key
-        {
-            get => key;
-            set => SetProperty(ref key, value);
-        }
+    [ObservableProperty]
+    private string _key;
 
-        private int rank;
-        public int Rank
-        {
-            get => rank;
-            set => SetProperty(ref rank, value);
-        }
+    [ObservableProperty]
+    private string _name;
 
-        private string name;
-        public string Name
-        {
-            get => name;
-            set => SetProperty(ref name, value);
-        }
+    [ObservableProperty]
+    private string _stopCode;
 
-        private string stopCode;
-        public string StopCode
-        {
-            get => stopCode;
-            set => SetProperty(ref stopCode, value);
-        }
+    [ObservableProperty]
+    private bool _isTemporary;
 
-        private bool isTimePoint;
-        public bool IsTimePoint
-        {
-            get => isTimePoint;
-            set => SetProperty(ref isTimePoint, value);
-        }
-    }
+    [ObservableProperty]
+    private List<object> _attributes;
 }

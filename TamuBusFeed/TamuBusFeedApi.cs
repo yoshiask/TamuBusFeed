@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl;
@@ -50,33 +51,52 @@ public class TamuBusFeedApi : IAsyncInit
         MapHub = new HubConnectionBuilder()
             .WithUrl(FEED_URL.AppendPathSegment("mapHub"))
             .Build();
-
         MapHub.Closed += HandleMapHubError;
+        await MapHub.StartAsync(cancellationToken);
 
         IsInitialized = true;
     }
 
-    public async Task<List<Route>> GetRoutes()
+    public async Task<List<RouteInfo>> GetRoutesByGroup(string groupId)
     {
         await InitAsync();
 
-        var result = await MapHub.InvokeAsync<object>("GetRoute", "01");
-        return new();
+        var routes = await MapHub.InvokeAsync<List<RouteInfo>>("GetRoutesByGroup", groupId);
+        return routes;
     }
 
-    public async Task<List<PatternElement>> GetPattern(string shortname, DateTimeOffset? date = null)
+    public async IAsyncEnumerable<RouteInfo> GetAllRoutes()
     {
-        date ??= DateTimeOffset.Now;
-        return await GetBase()
-            .AppendPathSegments("route", shortname, "pattern", date.Value.ToString("yyyy-MM-dd"))
-            .GetJsonAsync<List<PatternElement>>();
+        await InitAsync();
+
+        var allGroups = new string[] { "OnCampus", "OffCampus", "Gameday" };
+        foreach (var groupId in allGroups)
+        {
+            var routes = await MapHub.InvokeAsync<List<RouteInfo>>("GetRoutesByGroup", groupId);
+            foreach (var route in routes)
+                yield return route;
+        }
     }
 
-    public async Task<List<PatternElement>> GetStops(string shortname)
+    public async Task<RouteInfo> GetRoute(string routeNum)
     {
-        return await GetBase()
-            .AppendPathSegments("route", shortname, "stops")
-            .GetJsonAsync<List<PatternElement>>();
+        await InitAsync();
+
+        var route = await MapHub.InvokeAsync<RouteInfo>("GetRoute", routeNum);
+        return route;
+    }
+
+    public async Task<Pattern> GetPatternPaths(string routeKey)
+    {
+        await InitAsync();
+
+        var pattern = await MapHub.InvokeAsync<Pattern>("GetPatternPaths", routeKey);
+        return pattern;
+    }
+
+    public async Task GetRoutePatterns(string routeKey)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<AnnouncementFeed> GetAnnouncements()
@@ -133,11 +153,9 @@ public class TamuBusFeedApi : IAsyncInit
         return timeTable;
     }
 
-    public async Task<List<Mentor>> GetVehicles(string shortname)
+    public async Task<List<Mentor>> GetBusses(string routeKey)
     {
-        return await GetBase()
-            .AppendPathSegments("route", shortname, "buses", "mentor")
-            .GetJsonAsync<List<Mentor>>();
+        throw new NotImplementedException();
     }
 
     private Task HandleMapHubError(Exception? error) => HandleConnectionErrorAsync(_mapHub!, error);
