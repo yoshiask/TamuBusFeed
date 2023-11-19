@@ -1,19 +1,14 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace TamuBusFeed.Models
 {
-    public class TimeTable : ObservableObject
+    public class TimeTable
     {
-        private ObservableCollection<TimeStop> timeStops;
-        public ObservableCollection<TimeStop> TimeStops
-        {
-            get => timeStops;
-            set => SetProperty(ref timeStops, value);
-        }
+        public string Destination { get; set; }
+
+        public List<TimeStop> TimeStops { get; } = new();
 
         /// <summary>
         /// Gets the leave times for the specified trip.
@@ -71,23 +66,13 @@ namespace TamuBusFeed.Models
     /// <summary>
     /// Represents a column in a <see cref="TimeTable"/>.
     /// </summary>
-    public class TimeStop : ObservableObject
+    public class TimeStop
     {
-        private ObservableCollection<DateTimeOffset?> leaveTimes;
-        public ObservableCollection<DateTimeOffset?> LeaveTimes
-        {
-            get => leaveTimes;
-            set => SetProperty(ref leaveTimes, value);
-        }
+        public List<DateTimeOffset?> LeaveTimes { get; } = new();
 
-        private string name;
-        public string Name
-        {
-            get => name;
-            set => SetProperty(ref name, value);
-        }
+        public string Name { get; set; }
 
-        public IEnumerable<string> GetFormattedLeaveTimes() => leaveTimes.Select(t => t.HasValue ? t.Value.ToString("hh:mm tt") : "...");
+        public IEnumerable<string> GetFormattedLeaveTimes() => LeaveTimes.Select(t => t.HasValue ? t.Value.ToString("hh:mm tt") : "...");
     }
 
     /// <summary>

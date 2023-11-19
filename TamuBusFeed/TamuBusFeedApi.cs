@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 using Flurl;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Microsoft.AspNetCore.SignalR.Client;
-using Newtonsoft.Json.Linq;
 using OwlCore.ComponentModel;
 using TamuBusFeed.Models;
 
@@ -29,7 +29,7 @@ public class TamuBusFeedApi : IAsyncInit
     }
 
     private const string HOST_BASE = "https://transport.tamu.edu";
-    private static readonly Url FEED_URL = HOST_BASE.AppendPathSegments("BusRoutes.web");
+    private static readonly string FEED_URL = $"{HOST_BASE}/BusRoutes.web/";
     private HubConnection? _mapHub;
     private HubConnection? _timeHub;
 
@@ -43,16 +43,28 @@ public class TamuBusFeedApi : IAsyncInit
         set => _mapHub = value;
     }
 
+    private HubConnection TimeHub
+    {
+        get => _timeHub!;
+        set => _timeHub = value;
+    }
+
     public async Task InitAsync(CancellationToken cancellationToken = default)
     {
         if (IsInitialized)
             return;
 
         MapHub = new HubConnectionBuilder()
-            .WithUrl(FEED_URL.AppendPathSegment("mapHub"))
+            .WithUrl(FEED_URL + "mapHub")
             .Build();
         MapHub.Closed += HandleMapHubError;
         await MapHub.StartAsync(cancellationToken);
+
+        TimeHub = new HubConnectionBuilder()
+            .WithUrl(FEED_URL + "timeHub")
+            .Build();
+        TimeHub.Closed += HandleTimeHubError;
+        await TimeHub.StartAsync(cancellationToken);
 
         IsInitialized = true;
     }
@@ -106,60 +118,60 @@ public class TamuBusFeedApi : IAsyncInit
             .GetJsonAsync<AnnouncementFeed>();
     }
 
-    public async Task<TimeTable> GetTimetable(string shortname, DateTimeOffset? date = null)
+    public async Task<List<TimeTable>> GetTimetable(string routeNumber, DateTimeOffset? date = null)
     {
-        date ??= DateTimeOffset.Now;
-        var response = await GetBase()
-            .AppendPathSegments("route", shortname, "TimeTable", date.Value.ToString("yyyy-MM-dd"))
-            .GetJsonAsync<List<JObject>>();
+        await InitAsync();
 
-        TimeTable timeTable = new()
+        var dateString = (date ?? DateTimeOffset.Now).ToString("yyyy-MM-dd");
+
+        var response = await TimeHub.InvokeAsync<JsonObject>("GetTimeTable", routeNumber, dateString);
+        var jsonTimeTableList = response["jsonTimeTableList"]!.AsArray();
+
+        List<TimeTable> timeTables = new(2);
+        foreach (var directionNode in jsonTimeTableList)
         {
-            TimeStops = new()
-        };
+            var direction = directionNode!.AsObject();
+            string destination = direction["destination"]!.GetValue<string>();
+            if (destination.Length == 0)
+                break;
 
-        // Check for no service
-        if (response.Count == 1 && response[0].ContainsKey(" "))
-            return timeTable;
-
-        // Add stops
-        int guidLength = Guid.Empty.ToString().Length;
-        foreach (var stop in response[0])
-        {
-            // The JSON keys look like "e6266125-1350-4226-8413-b41869f0c313Trigon"
-            string name = stop.Key.Remove(0, guidLength);
-            timeTable.TimeStops.Add(new()
+            TimeTable timeTable = new()
             {
-                Name = name,
-                LeaveTimes = new()
-            });
-        }
-
-        // Populate times
-        foreach (var row in response)
-        {
-            var rowTimes = row.Children<JProperty>().Select(c => c.Value.ToString()).ToArray();
-            for (int col = 0; col < row.Count; col++)
+                Destination = destination
+            };
+            
+            string html = "<table>" + direction["html"]!.GetValue<string>() + "</table>";
+            var htmlDoc = await new HtmlParser().ParseDocumentAsync(html);
+            foreach (var timeStopName in htmlDoc.QuerySelectorAll("thead > tr > th"))
             {
-                DateTimeOffset? time = null;
-                string timeStr = rowTimes[col];
-                if (!string.IsNullOrEmpty(timeStr))
-                    time = DateTimeOffset.Parse(timeStr);
-
-                timeTable.TimeStops[col].LeaveTimes.Add(time);
+                timeTable.TimeStops.Add(new()
+                {
+                    Name = timeStopName!.TextContent
+                });
             }
+
+            var stopTimeEntries = htmlDoc.QuerySelectorAll("time").ToArray();
+            var stopCount = timeTable.TimeStops.Count;
+            for (int t = 0; t < stopTimeEntries.Length; t++)
+            {
+                var stopTimeEntry = stopTimeEntries[t];
+                var stopTime = DateTimeOffset.Parse(stopTimeEntry.GetAttribute("dateTime")!);
+                timeTable.TimeStops[t % stopCount].LeaveTimes.Add(stopTime);
+            }
+
+            timeTables.Add(timeTable);
         }
 
-        return timeTable;
+        return timeTables;
     }
 
     public async Task<List<Mentor>> GetBusses(string routeKey)
     {
-        throw new NotImplementedException();
+        return new();
     }
 
-    private Task HandleMapHubError(Exception? error) => HandleConnectionErrorAsync(_mapHub!, error);
-    private Task HandleTimeHubError(Exception? error) => HandleConnectionErrorAsync(_timeHub!, error);
+    private Task HandleMapHubError(Exception? error) => HandleConnectionErrorAsync(MapHub, error);
+    private Task HandleTimeHubError(Exception? error) => HandleConnectionErrorAsync(TimeHub, error);
 
     private async Task HandleConnectionErrorAsync(HubConnection connection, Exception? error)
     {
